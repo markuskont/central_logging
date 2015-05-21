@@ -1,5 +1,5 @@
 # Download nxlog .msi file
-Invoke-WebRequest "http://downloads.sourceforge.net/project/n xlog-ce/nxlog-ce-2.8.1248.msi?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fnxlog-ce%2Ffiles%2F&ts=1432210232&use_mirror=c znic" -OutFile nxlog.msi
+Invoke-WebRequest "http://downloads.sourceforge.net/project/nxlog-ce/nxlog-ce-2.8.1248.msi?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fnxlog-ce%2Ffiles%2F&ts=1432210232&use_mirror=cznic" -OutFile nxlog.msi
 
 # Install nxlog .msi file
 Start-Process ".\nxlog.msi" /qn -Wait
