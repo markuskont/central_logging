@@ -1,4 +1,5 @@
 # Download nxlog .msi file
+# PS! Link might be broken, please verify
 Invoke-WebRequest "http://downloads.sourceforge.net/project/nxlog-ce/nxlog-ce-2.8.1248.msi?r=&ts=1433337759&use_mirror=cznic" -OutFile nxlog.msi
 
 # Install nxlog .msi file
