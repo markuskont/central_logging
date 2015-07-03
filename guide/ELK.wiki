@@ -1,0 +1,648 @@
+his guide assumes that operational syslog server on Ubuntu Server 14.04 LTS virtual machine with working network connection is installed and accessible via SSH. Basic understanding of vim command is assumed but configuration can be carried out with other editors as well. Functional custom CA setup is required with make_cert.sh script. Syslog server must be operational. Commands must be carried out as root user, execution via sudo is possible but untested. Relevant entries must be appended to presented configuration files or, if already present, altered according to temlates within this guide. Relevant services must be restarted for changes to take effect.
+
+Storage + visualization serveri is configured separately from regular correlation server. This is due to the fact that described components require java (personal preference, but I do not like mixing it with other solututions). Server can be used independantly as central log collector, or , in my case, all logs from syslog-ng correlation server will be forwarded here for storage and visualization.
+
+Please change domain.ex with your own domain name. Same goes for server names.
+
+== Set up certificates ==
+
+I did this in testing, but live is configured directly on top of [[Syslog-ng serveri seadistamine|existing server]].
+
+== Forward all logs from relay syslog-ng to storage server ==
+
+Only needed if you plan to configure ELK on separate server. Create relay configuration in '''/etc/syslog-ng/syslog-ng.conf'''.
+
+<pre>
+...
+destination d_kibana_server {
+        syslog(
+                kibana.domain.ex
+                transport("tls")
+                port(6514)
+                tls( peer-verify(required-trusted) ca_dir('/etc/ssl/syslog/') key_file('/etc/ssl/syslog/orion.domain.ex-key.pem') cert_file('/etc/ssl/syslog/orion.domain.ex-cert.pem'))
+        );
+};
+...
+log {
+        source(s_remote_ietf);
+        source(s_src);
+        destination(d_local);
+        destination(d_kibana_server);
+};
+...
+</pre>
+
+Then restart the service.
+
+<pre>
+service syslog-ng restart
+</pre>
+
+== Set up elasticsearch server ==
+
+Install Java packages
+
+<pre>
+apt-get install openjdk-7-jre-headless -y
+</pre>
+
+=== Option 1. Manual install ===
+
+'''OUTDATED!!!''' While this works, I would not personally recommend it. It is better to use repositories to ease the management.
+
+<pre>
+cd /opt/
+export elastic_version=elasticsearch-1.2.0.deb
+wget https://download.elasticsearch.org/elasticsearch/elasticsearch/$elastic_version
+dpkg -i $elastic_version
+</pre>
+
+=== Option 2. Repository ===
+
+Elasticsearch developers provide custom repository to manages packages. Each major release (1.X) has its own repo, so keep that in mind when installing or upgrading.
+
+<pre>
+wget -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add -
+echo 'deb http://packages.elasticsearch.org/elasticsearch/1.5/debian stable main' | tee /etc/apt/sources.list.d/elasticsearch.list
+apt-get update
+apt-get install elasticsearch
+</pre>
+
+Add daemon to startup.
+
+<pre>
+update-rc.d elasticsearch defaults 95 10
+</pre>
+
+Then start the server.
+
+<pre>
+/etc/init.d/elasticsearch start
+</pre>
+
+Package can later be upgraded to next major release by changing the version number in '''/etc/apt/sources.list.d/elasticsearch.list'''.
+
+<pre>
+deb http://packages.elasticsearch.org/elasticsearch/1.N/debian stable main
+</pre>
+
+Then using apt.
+
+<pre>
+apt-get update && apt-get upgrade
+</pre>
+
+== (Optional) Configure Elasticsearch cluster ==
+
+Setting up a high-availability cluster for Elasicsearch is quite easy. Essentially, only cluster name must be configured in '''/etc/elasticsearch/elasticsearch.yml'''. Node discovery and master election shall be conducted via multicast ping.
+
+<pre>
+cluster.name: isabel
+</pre>
+
+Node name can be configured, but is not required, as ES will generate on automatically. Still, if one would like to have more control over the cluster, then following parameter must be altered. Hostname parameter is the only setting within '''/etc/elasticsearch/elasticsearch.yml''' file which must be '''unique''' across the cluster.
+
+<pre>
+node.name: "ela1"
+</pre>
+
+ES '''1.4''' ships with a security setting, which disables data transfer between ES and end-user browser. Kibana3 functions on this principle, thus following parameter must be configured. 
+
+<pre>
+http.cors.allow-origin: "/.*/"
+http.cors.enabled: true
+</pre>
+
+Multicast ping can be disabled, to reduce unneeded network noise. A list on addresses must be provided in this scenario. Please note that not all cluster nodes must be configured manually withinin this list, as new ES nodes simply require connection with at least one master node, in order to be joined with the cluster.
+
+<pre>
+discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: [10.80.6.53, 10.80.6.61, 10.80.6.62]
+</pre>
+
+== Elasticsearch optimization ==
+
+As a rule of thumb, 50 per cent of server physical memory should be allocated to elasticsearch in '''/etc/default/elasticsearch''' (e.g. if server has 8 gigabytes of RAM, then 4 should be allocated to ES java virtual machine heap).
+
+<pre>
+ES_HEAP_SIZE=4g
+</pre>
+
+Additionally, '''swap''' should be disabled on ES nodes, as it serves no purpose. ES essentially functions as a memory cache for JSON documents to maximize search performance. Therefore, the concept of ''swap'' directly contradicts this notion.
+
+== Configure log forwarder ==
+
+=== Rsyslog ===
+
+Please consider this section strictly informative, my solution is configured using a logstash file input with grok filters. Rsyslog and syslog-ng can not (and if I'm wrong, then should not) be used in conjunction. Configuration has also not been tested with elasticsearch 1.4. Elasticsearch plugin has existed in earlier versions (not 5), but has not been added as dynamically loadable module for apt install. Therefore pre-8 versions of rsyslog must be compiled by hand for elasticsearch support. Better solution is simply to use version 8 from adiscon repository.
+
+<pre>
+add-apt-repository ppa:adiscon/v8-stable
+apt-get update && apt-get dist-upgrade && apt-get dist-upgrade
+apt-get -y install rsyslog-elasticsearch rsyslog-gnutls
+</pre>
+
+Then make sure that tcp module is loaded in '''/etc/rsyslog.conf'''.
+
+<pre>
+...
+$ModLoad imtcp
+...
+</pre>
+
+Make sure that listener exists in '''/etc/rsyslog.d/remote.conf''' (if configuring a relay server)
+
+<pre>
+# TLS driver load
+$DefaultNetstreamDriver gtls
+
+# certificate files
+$DefaultNetstreamDriverCAFile /etc/ssl/syslog/cacert.pem
+$DefaultNetstreamDriverCertFile /etc/ssl/syslog/cert.pem
+$DefaultNetstreamDriverKeyFile /etc/ssl/syslog/key.pem
+
+$ActionSendStreamDriverAuthMode x509/name
+$InputTCPServerStreamDriverPermittedPeer *.domain.ex
+$InputTCPServerStreamDriverMode 1 # run driver in TLS-only mode
+$InputTCPServerRun 6514 # start up listener at port 6514
+</pre>
+
+For simple change in domain name value. Don't forget to escape the dot (matching is done using regular expressions; unescaped dot means "match anything")
+
+<pre>
+export domain_name=<your_domain_name>
+
+sed -i s/domain\.ex/$domain_name/g /etc/rsyslog.d/remote.conf
+
+service rsyslog restart
+</pre>
+
+Finally create forwarding configuration in '''/etc/rsyslog.d/elasticsearch.conf'''.
+
+<pre>
+module(load="imuxsock")             # for listening to /dev/log
+module(load="omelasticsearch") # for outputting to Elasticsearch
+# this is for index names to be like: logstash-YYYY.MM.DD
+template(name="logstash-index"
+  type="list") {
+    constant(value="logstash-")
+    property(name="timereported" dateFormat="rfc3339" position.from="1" position.to="4")
+    constant(value=".")
+    property(name="timereported" dateFormat="rfc3339" position.from="6" position.to="7")
+    constant(value=".")
+    property(name="timereported" dateFormat="rfc3339" position.from="9" position.to="10")
+}
+
+# this is for formatting our syslog in JSON with @timestamp
+template(name="plain-syslog"
+  type="list") {
+    constant(value="{")
+      constant(value="\"@timestamp\":\"")     property(name="timereported" dateFormat="rfc3339")
+      constant(value="\",\"host\":\"")        property(name="hostname")
+      constant(value="\",\"severity\":\"")    property(name="syslogseverity-text")
+      constant(value="\",\"facility\":\"")    property(name="syslogfacility-text")
+      constant(value="\",\"tag\":\"")   property(name="syslogtag" format="json")
+      constant(value="\",\"message\":\"")    property(name="msg" format="json")
+    constant(value="\"}")
+}
+# this is where we actually send the logs to Elasticsearch (localhost:9200 by default)
+action(type="omelasticsearch"
+    template="plain-syslog"
+    searchIndex="logstash-index"
+    dynSearchIndex="on")
+</pre>
+
+And restart the daemon.
+
+<pre>
+/etc/init.d/rsyslog restart
+</pre>
+
+=== Logstash ===
+
+Install the packages.
+
+<pre>
+echo 'deb http://packages.elasticsearch.org/logstash/1.4/debian stable main' |  tee /etc/apt/sources.list.d/logstash.list
+apt-get update
+apt-get install logstash
+</pre>
+
+==== Set up geoip database ====
+
+Logstash already uses GeoLiteCity database. However I suspect that bundled version might be out-dated, since database is updated monthly.
+
+<pre>
+mkdir /opt/map/ && cd /opt/map
+
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && gunzip GeoLiteCity.dat.gz
+</pre>
+
+'''TODO''': periodic update script (scheduled in cron)
+
+==== Logstash configuration ====
+
+Create a folder to store custom patterns.
+
+<pre>
+mkdir /etc/logstash/patterns/
+</pre>
+
+Logstash default apache pattern uses '''common''' log format. Knowing what that pattern matches, we can create custom pattern for '''vhost_common''' format. Create '''/etc/logstash/patterns/apache.pattern''' file.
+
+<pre>
+VHOSTCOMMONAPACHELOG %{IPORHOST:http_vhost}:?%{IPORHOST:http_port}? %{IPORHOST:http_clientip} %{USER:http_ident} %{USER:http_auth} \[%{HTTPDATE:http_timestamp}\] "(?:%{WORD:http_method} %{NOTSPACE:http_request}(?: HTTP/%{NUMBER:http_version})?|%{DATA:http_rawrequest})" %{NUMBER:http_response} (?:%{NUMBER:http_bytes}|-) "%{DATA:http_referer}" "%{DATA:http_useragent}"
+</pre>
+
+Do the same with '''/etc/logstash/patterns/samba.pattern''' and '''/etc/logstash/patterns/snort.pattern''' respectively.
+
+<pre>
+SAMBAAUDITLOG %{DATA:smbd_audit_user}\|%{IPORHOST:smbd_audit_clientIP}\|%{IPORHOST:smbd_audit_clientNETBIOS}\|%{DATA:smbd_audit_sharename}\|%{DATA:smbd_audit_action}\|%{DATA:smbd_audit_exitcode}\|(?:%{GREEDYDATA:smbd_audit_filepath}\|%{NUMBER:smbd_audit_chmod}$|%{GREEDYDATA:smbd_audit_filepath})
+</pre>
+<pre>
+SNORTALERTLOG \[%{NUMBER:snort_GeneratorID}:%{NUMBER:sort_SignatureID}:%{NUMBER:snort_SignatureRev}\] %{DATA:snort_alert_desc} \[Classification: %{DATA:snort_classification}\] \[Priority: %{NUMBER:snort_priority}\] \{%{DATA:snort_protocol}\} %{IPORHOST:snort_src_IP}:?%{NUMBER:snort_src_port}? -> %{IPORHOST:snort_dst_IP}:?%{NUMBER:snort_dst_port}?
+</pre>
+
+Then configure logstash with tcp listener on localhost loopback interface. Filter should be able to parse any message in BSD syslog format. Some log streams, such as apache access or samba file server audit, are additionally broken up to extract relevant information. a Edit '''/etc/logstash/conf.d/10-syslog.conf'''.
+
+<pre>
+input {
+        tcp {
+                host => "127.0.0.1"
+                port => 10514
+                type => "syslog_bsd"
+        }
+}
+
+filter {
+        grok {
+                patterns_dir => "/etc/logstash/patterns/"
+                match => [ "message", "(?:<%{DATA:syslog_pri}>)?%{SYSLOGTIMESTAMP:syslog_timestamp} %{DATA:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?:? %{GREEDYDATA:syslog_message}" ]
+        }
+        if [syslog_program] == "apache" {
+                grok {
+                        patterns_dir => "/etc/logstash/patterns/"
+                        match => [ "syslog_message", "%{VHOSTCOMMONAPACHELOG}" ]
+                }
+                geoip {
+                        add_tag => [ "GeoIP" ]
+                        source => "http_clientip"
+                        database => "/opt/map/GeoLiteCity.dat"
+                }
+        }
+        else if [syslog_program] == "snort" {
+                grok {
+                        patterns_dir => "/etc/logstash/patterns/"
+                        match => [ "syslog_message", "%{SNORTALERTLOG}" ]
+                }
+                geoip {
+                        add_tag => [ "GeoIP" ]
+                        source => "snort_src_IP"
+                        database => "/opt/map/GeoLiteCity.dat"
+                }
+        }
+        else if [syslog_program] == "smbd" {
+                grok {
+                        patterns_dir => "/etc/logstash/patterns/"
+                        match => [ "syslog_message", "%{SAMBAAUDITLOG}" ]
+                }
+        }
+        date {
+                match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+        }
+}
+
+output {
+        elasticsearch { host => "localhost" }
+        stdout { codec => rubydebug }
+}
+</pre>
+
+After '''restarting''' logstash daemon, forward all relevalt log streams to newly created listener. Following configuration in '''/etc/rsyslog.d/logstash.conf''' achieves log forwarding with '''Rsyslog'''.
+
+<pre>
+$ModLoad imuxsock
+$ModLoad imklog
+
+:syslogtag, contains, "apache"          @@127.0.0.1:10514
+:syslogtag, contains, "puppet"          @@127.0.0.1:10514
+:syslogtag, contains, "snort"           @@127.0.0.1:10514
+:syslogtag, contains, "smbd"            @@127.0.0.1:10514
+</pre>
+
+The following configuration achieves log forwarding with '''Syslog-ng'''.
+
+<pre>
+
+</pre>
+
+== Kibana 3 ==
+
+Kibana version 3 does not have a built-in web server (like version 2, and soon version 4). It also lacks user authentication, so authenticated Apache reverse proxy with SSL should be configured.
+
+=== Option 1. Apache ===
+
+==== Install apache server ====
+
+<pre>
+apt-get install apache2
+a2dissite 000-default
+service apache2 reload
+</pre>
+
+==== Set up apache vhost template ====
+
+HTTPS should be used by default. Create '''/etc/apache2/sites-available/vhost_ssl_template'''.
+
+<pre>
+<VirtualHost *:80>
+        ServerName __VHOST__
+        RewriteEngine On
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+
+<VirtualHost *:443>
+        ServerName __VHOST__
+
+        SSLEngine on
+        SSLCertificateFile /etc/apache2/__VHOST__/__VHOST__.crt
+        SSLCertificateKeyFile /etc/apache2/id_rsa.key
+
+        DocumentRoot /srv/virtuals/__VHOST__/html/
+        <Directory /srv/virtuals/__VHOST__/html/>
+                Require all granted
+                Options -Multiviews
+        </Directory>
+
+        LogLevel debug
+        ErrorLog /srv/virtuals/__VHOST__/log/error.log
+        CustomLog /srv/virtuals/__VHOST__/log/access.log vhost_combined
+
+        # Set global proxy timeouts
+        <Proxy http://127.0.0.1:9200>
+                ProxySet connectiontimeout=5 timeout=90
+        </Proxy>
+
+        # Proxy for _aliases and .*/_search
+        <LocationMatch "^/(_nodes|_aliases|.*/_aliases|_search|.*/_search|_mapping|.*/_mapping)$">
+                ProxyPassMatch http://127.0.0.1:9200/$1
+                ProxyPassReverse http://127.0.0.1:9200/$1
+        </LocationMatch>
+
+        # Proxy for kibana-int/{dashboard,temp} stuff (if you don't want auth on /, then you will want these to be protected)
+        <LocationMatch "^/(kibana-int/dashboard/|kibana-int/temp)(.*)$">
+                ProxyPassMatch http://127.0.0.1:9200/$1$2
+                ProxyPassReverse http://127.0.0.1:9200/$1$2
+        </LocationMatch>
+
+        <location />
+                AuthType basic
+                AuthName "private"
+                AuthUserFile /var/secure/.htpasswd
+                Require valid-user
+        </location>
+
+#       # Optional disable auth for a src IP (eg: your monitoring host or subnet)
+#       # Apache 2.2 syntax
+#       <Location />
+#               Allow from 5.6.7.8
+#               Deny from all
+#               Satisfy any
+#
+#               AuthLDAPBindDN "CN=_ldapbinduser,OU=Users,DC=example,DC=com"
+#               AuthLDAPBindPassword "ldapbindpass"
+#               AuthLDAPURL "ldaps://ldap01.example.com ldap02.example.com/OU=Users,DC=example,DC=com?sAMAccountName?sub?(objectClass=*)"
+#               AuthType Basic
+#               AuthBasicProvider ldap
+#               AuthName "Please authenticate for Example dot com"
+#               AuthLDAPGroupAttributeIsDN on
+#               require valid-user
+#       </Location>
+
+</VirtualHost>
+</pre>
+
+==== Basic authenticaiton ====
+
+<pre>
+apt-get install apache2-utils
+
+mkdir /var/secure
+
+chown www-data /var/secure/ && chmod 700 /var/secure/
+
+htpasswd -c /var/secure/.htpasswd admin
+
+/etc/init.d/apache2 reload
+</pre>
+
+==== Create apache vhost for kibana ====
+
+Create folders for code and logs.
+
+<pre>
+export VHOST=kibana.domain.ex
+mkdir -p /srv/virtuals/$VHOST/{html,log}
+</pre>
+
+Create server private key in '''/etc/apache2/id_rsa.key'''.
+
+<pre>
+ssh-keygen -t rsa -b 2048
+</pre>
+
+Create folder for key and certificate pair, and generate request. '''CN''' field should match '''$VHOST''' variable.
+
+<pre>
+mkdir /etc/apache2/$VHOST && openssl req -new -key /etc/apache2/id_rsa.key -out /etc/apache2/$VHOST/$VHOST.csr
+</pre>
+
+Then sign the request.
+
+<pre>
+openssl x509 -req -days 1825 -in /etc/apache2/$VHOST/$VHOST.csr -signkey /etc/apache2/id_rsa.key -out /etc/apache2/$VHOST/$VHOST.crt
+</pre>
+
+Finally create vhost configuration file.
+
+<pre>
+cp /etc/apache2/sites-available/vhost_ssl_template /etc/apache2/sites-available/$VHOST-ssl.conf
+</pre>
+
+Change the variable with vhost name.
+
+<pre>
+sed -i s/__VHOST__/$VHOST/g /etc/apache2/sites-available/$VHOST-ssl.conf
+</pre>
+
+Before restarting make sure that apache modules and new vhost are enabled.
+
+<pre>
+a2enmod ssl rewrite proxy proxy_http
+a2ensite $VHOST-ssl.conf
+</pre>
+
+And reload apache configuration.
+
+<pre>
+/etc/init.d/apache2 reload
+</pre>
+
+=== Option 2. nginx ===
+
+<pre>
+##
+# You should look at the following URL's in order to grasp a solid understanding
+# of Nginx configuration files in order to fully unleash the power of Nginx.
+# http://wiki.nginx.org/Pitfalls
+# http://wiki.nginx.org/QuickStart
+# http://wiki.nginx.org/Configuration
+#
+# Generally, you will want to move this file somewhere, and start with a clean
+# file but keep this around for reference. Or just disable in sites-enabled.
+#
+# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
+##
+
+# Default server configuration
+#
+upstream elasticsearch {
+    server ela1.domain.int:9200;
+    server ela2.domain.int:9200;
+    keepalive 64;
+}
+
+server {
+	listen 443 ssl;
+	server_name ela3.domain.ex;
+
+	#access_log syslog:server=unix:/run/systemd/journal/dev-log;
+	#error_log syslog:server=unix:/dev/log
+
+	ssl on;
+	ssl_certificate /etc/ssl/certs/cert.pem;
+	ssl_certificate_key /etc/ssl/private/key.pem;
+	ssl_trusted_certificate /etc/ssl/certs/CA.pem;
+	ssl_prefer_server_ciphers       on;
+	ssl_protocols                   TLSv1 TLSv1.1 TLSv1.2;
+	ssl_ciphers                     ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS;
+
+
+	location / {
+		index  index.html  index.htm;
+		root  /var/www/html/;
+		auth_basic "Restricted";
+		auth_basic_user_file /var/secure/.htpasswd;
+	}
+
+	location ~ ^/_(aliases|nodes)$ {
+		auth_basic "Restricted";
+		auth_basic_user_file /var/secure/.htpasswd;
+		proxy_pass http://elasticsearch;
+		proxy_read_timeout 90;
+		proxy_redirect off;
+		proxy_http_version 1.1;
+		proxy_set_header Connection "";
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_pass_header Access-Control-Allow-Origin;
+		proxy_pass_header Access-Control-Allow-Methods;
+		proxy_hide_header Access-Control-Allow-Headers;
+		add_header Access-Control-Allow-Headers 'X-Requested-With, Content-Type';
+		add_header Access-Control-Allow-Credentials true;
+	}
+	location ~ ^/.*/_(aliases|search|mapping)$ {
+		auth_basic "Restricted";
+		auth_basic_user_file /var/secure/.htpasswd;
+		proxy_pass http://elasticsearch;
+		proxy_read_timeout 90;
+		proxy_redirect off;
+		proxy_http_version 1.1;
+		proxy_set_header Connection "";
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_pass_header Access-Control-Allow-Origin;
+		proxy_pass_header Access-Control-Allow-Methods;
+		proxy_hide_header Access-Control-Allow-Headers;
+		add_header Access-Control-Allow-Headers 'X-Requested-With, Content-Type';
+		add_header Access-Control-Allow-Credentials true;
+	}
+
+	# Password protected end points
+	location ~ ^/kibana-int/dashboard/.*$ {
+		proxy_pass http://elasticsearch;
+		proxy_read_timeout 90;
+		limit_except GET {
+			proxy_pass http://elasticsearch;
+			auth_basic "Restricted";
+			auth_basic_user_file /var/secure/.htpasswd;
+		}
+	}
+	location ~ ^/kibana-int/temp.*$ {
+		proxy_pass http://elasticsearch;
+		proxy_read_timeout 90;
+		limit_except GET {
+			proxy_pass http://elasticsearch;
+			auth_basic "Restricted";
+			auth_basic_user_file /var/secure/.htpasswd;
+		}
+	}
+}
+</pre>
+
+=== kibana ===
+
+Download the code, and unpack it to vhost root directory.
+
+<pre>
+apt-get install unzip
+cd /opt
+
+wget http://download.elasticsearch.org/kibana/kibana/kibana-latest.zip
+
+unzip kibana-latest.zip
+
+mv kibana-latest/* /srv/virtuals/$VHOST/html/ && cd /srv/virtuals/$VHOST/html/
+</pre>
+
+And configure elasticsearch backend connection in '''config.js''' file.
+
+<pre>
+...
+elasticsearch: "https://"+window.location.hostname+":443",
+...
+</pre>
+
+== Iptables ==
+
+Elasticsearch has no built in authentication nor encryption, but opens a large amount of ports. That is the reason why reverse proxy was configured - all data exchange is done through localhost, and through apache reverse proxy. Ports can then be safely closed for outside world in '''/etc/iptables.conf''' file.
+
+<pre>
+# Generated by iptables-save v1.4.12 on Fri Mar  7 10:28:40 2014
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [772:63557]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -m state --state NEW -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 80 -m state --state NEW -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 443 -m state --state NEW -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 6514 -m state --state NEW -j ACCEPT
+-A INPUT -j LOG --log-prefix "iptables: " --log-level 5
+-A INPUT -j DROP
+COMMIT
+# Completed on Fri Mar  7 10:28:40 2014
+</pre>
+
+Add iptables rules to network startup (under primary network interface). Edit '''/etc/network/interfaces'''.
+
+<pre>
+...
+pre-up iptables-restore < /etc/iptables.conf
+...
+</pre>
+
