@@ -27,15 +27,13 @@
         }
       } ],
       "properties" : {
-        "geoip" : {
-          "dynamic" : true,
-          "path" : "full",
+        "geoip"  : {
+          "dynamic": true,
           "properties" : {
-            "location" : {
-              "type" : "geo_point"
-            }
-          },
-          "type" : "object"
+            "location" : { "type" : "geo_point" },
+            "latitude" : { "type" : "float" },
+            "longitude" : { "type" : "float" }
+          }
         },
         "@version" : {
           "index" : "not_analyzed",
@@ -139,7 +137,7 @@
         }
       },
       "_all" : {
-        "enabled" : true
+        "enabled" : false
       }
     }
   },
