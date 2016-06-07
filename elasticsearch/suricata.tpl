@@ -1,9 +1,9 @@
 {
   "template" : "suricata-*",
   "settings" : {
-    "index.refresh_interval" : "30s",
-    "index.number_of_replicas" : "0",
-    "index.number_of_shards" : "2"
+    "index.refresh_interval" : "60s",
+    "index.number_of_replicas" : "1",
+    "index.number_of_shards" : "4"
   },
   "mappings" : {
     "_default_" : {
