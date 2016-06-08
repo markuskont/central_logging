@@ -1,0 +1,328 @@
+{
+  "template" : "suricata-*",
+  "settings" : {
+    "index.refresh_interval" : "60s",
+    "index.number_of_replicas" : "1",
+    "index.number_of_shards" : "4"
+  },
+  "mappings" : {
+    "_default_" : {
+      "_all" : {"enabled" : false, "omit_norms" : true},
+      "dynamic_templates" : [ {
+        "message_field" : {
+          "match" : "message",
+          "match_mapping_type" : "string",
+          "mapping" : {
+            "type" : "string", "index" : "analyzed", "omit_norms" : true,
+            "fielddata" : { "format" : "disabled" }
+          }
+        }
+      }, {
+        "string_fields" : {
+          "match" : "*",
+          "match_mapping_type" : "string",
+          "mapping" : {
+            "type" : "string", "index" : "analyzed", "omit_norms" : true,
+            "fielddata" : { "format" : "disabled" },
+            "fields" : {
+              "raw" : {"type": "string", "index" : "not_analyzed", "ignore_above" : 256}
+            }
+          }
+        }
+      } ],
+      "properties" : {
+        "@timestamp": { "type": "date" },
+        "@version": { "type": "string", "index": "not_analyzed" },
+        "geoip"  : {
+          "dynamic": true,
+          "properties" : {
+            "location" : { "type" : "geo_point" },
+            "latitude" : { "type" : "float" },
+            "longitude" : { "type" : "float" }
+          }
+        },
+        "timestamp": {
+          "index": "analyzed",
+          "type": "date"
+        },
+        "dest_ip" : {
+          "index": "analyzed",
+          "type" : "ip"
+        },
+        "dest_port" : {
+          "index": "analyzed",
+          "type" : "integer"
+        },
+        "event_type" : {
+          "index": "not_analyzed",
+          "type" : "string"
+        },
+        "icmp_code" : {
+          "index": "analyzed",
+          "type" : "integer"
+        },
+        "icmp_type" : {
+          "index": "analyzed",
+          "type" : "integer"
+        },
+        "proto" : {
+          "index": "not_analyzed",
+          "type" : "string"
+        },
+        "src_ip" : {
+          "index": "analyzed",
+          "type" : "ip"
+        },
+        "src_port" : {
+          "index": "analyzed",
+          "type" : "integer"
+        },
+        "packet" : {
+          "index" : "not_analyzed",
+          "type" : "string"
+        },
+        "payload_printable" : {
+          "index" : "not_analyzed",
+          "type" : "string"
+        },
+        "payload" : {
+          "index" : "not_analyzed",
+          "type" : "string"
+        },
+        "alert": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "action" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "category" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "dst_mask" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "gid" : {
+              "index" : "not_analyzed",
+              "type" : "integer"
+            },
+            "rev" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "severity" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "signature" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "signature_id" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            }
+          }
+        },
+        "email": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "attachment" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "cc" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "from" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "to" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "status" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "url" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
+        },
+        "smtp": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "mail_from" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "helo" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "rcpt_to" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
+        },
+        "http": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "http_method" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "hostname" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "url" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "http_content_type" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "http_refer" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "http_user_agent" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "length" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "protocol" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "redirect" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "xff" : {
+              "index" : "analyzed",
+              "type" : "string"
+            },
+            "status" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "redirect" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
+        },
+        "tls": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "fingerprint" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "issuerdn" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "sni" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "subject" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "version" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
+        },
+        "ssh": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "client" : {
+              "dynamic": true,
+              "type": "object",
+              "properties": {
+                "proto_version" : {
+                  "index" : "not_analyzed",
+                  "type" : "string"
+                },
+                "software_version" : {
+                  "index" : "not_analyzed",
+                  "type" : "string"
+                }
+              }
+            },
+            "server" : {
+              "dynamic": true,
+              "type": "object",
+              "properties": {
+                "proto_version" : {
+                  "index" : "not_analyzed",
+                  "type" : "string"
+                },
+                "software_version" : {
+                  "index" : "not_analyzed",
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "fileinfo": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "filename" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "md5" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "size" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "tx_id" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "state" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "stored" : {
+              "type" : "boolean"
+            },
+            "magic" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

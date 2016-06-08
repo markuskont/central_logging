@@ -1,0 +1,1387 @@
+{
+  "suricata-2016.06.08.15" : {
+    "mappings" : {
+      "events" : {
+        "_all" : {
+          "enabled" : false,
+          "omit_norms" : true
+        },
+        "dynamic_templates" : [ {
+          "message_field" : {
+            "mapping" : {
+              "index" : "analyzed",
+              "omit_norms" : true,
+              "fielddata" : {
+                "format" : "disabled"
+              },
+              "type" : "string"
+            },
+            "match" : "message",
+            "match_mapping_type" : "string"
+          }
+        }, {
+          "string_fields" : {
+            "mapping" : {
+              "index" : "analyzed",
+              "omit_norms" : true,
+              "fielddata" : {
+                "format" : "disabled"
+              },
+              "type" : "string",
+              "fields" : {
+                "raw" : {
+                  "index" : "not_analyzed",
+                  "ignore_above" : 256,
+                  "type" : "string"
+                }
+              }
+            },
+            "match" : "*",
+            "match_mapping_type" : "string"
+          }
+        } ],
+        "properties" : {
+          "@timestamp" : {
+            "type" : "date",
+            "format" : "strict_date_optional_time||epoch_millis"
+          },
+          "@version" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "alert" : {
+            "dynamic" : "true",
+            "properties" : {
+              "action" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "category" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "dst_mask" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "gid" : {
+                "type" : "integer"
+              },
+              "rev" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "severity" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "signature" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "signature_id" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              }
+            }
+          },
+          "app_proto" : {
+            "type" : "string",
+            "norms" : {
+              "enabled" : false
+            },
+            "fielddata" : {
+              "format" : "disabled"
+            },
+            "fields" : {
+              "raw" : {
+                "type" : "string",
+                "index" : "not_analyzed",
+                "ignore_above" : 256
+              }
+            }
+          },
+          "dest_ip" : {
+            "type" : "ip",
+            "index" : "analyzed"
+          },
+          "dest_port" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "email" : {
+            "properties" : {
+              "attachment" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "cc" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "from" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "status" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "to" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "url" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              }
+            }
+          },
+          "event_type" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "fileinfo" : {
+            "properties" : {
+              "filename" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "magic" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "md5" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "size" : {
+                "type" : "long"
+              },
+              "state" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "stored" : {
+                "type" : "boolean"
+              },
+              "tx_id" : {
+                "type" : "long"
+              }
+            }
+          },
+          "flow_id" : {
+            "type" : "long"
+          },
+          "geoip" : {
+            "dynamic" : "true",
+            "properties" : {
+              "latitude" : {
+                "type" : "float"
+              },
+              "location" : {
+                "type" : "geo_point"
+              },
+              "longitude" : {
+                "type" : "float"
+              }
+            }
+          },
+          "hostname" : {
+            "type" : "string",
+            "norms" : {
+              "enabled" : false
+            },
+            "fielddata" : {
+              "format" : "disabled"
+            },
+            "fields" : {
+              "raw" : {
+                "type" : "string",
+                "index" : "not_analyzed",
+                "ignore_above" : 256
+              }
+            }
+          },
+          "http" : {
+            "properties" : {
+              "hostname" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "http_content_type" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "http_method" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "http_refer" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "http_user_agent" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "length" : {
+                "type" : "long"
+              },
+              "protocol" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "redirect" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "status" : {
+                "type" : "long"
+              },
+              "url" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "xff" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              }
+            }
+          },
+          "icmp_code" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "icmp_type" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "in_iface" : {
+            "type" : "string",
+            "norms" : {
+              "enabled" : false
+            },
+            "fielddata" : {
+              "format" : "disabled"
+            },
+            "fields" : {
+              "raw" : {
+                "type" : "string",
+                "index" : "not_analyzed",
+                "ignore_above" : 256
+              }
+            }
+          },
+          "packet" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "payload" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "payload_printable" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "proto" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "smtp" : {
+            "properties" : {
+              "helo" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "mail_from" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "rcpt_to" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              }
+            }
+          },
+          "src_ip" : {
+            "type" : "ip",
+            "index" : "analyzed"
+          },
+          "src_port" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "ssh" : {
+            "properties" : {
+              "client" : {
+                "properties" : {
+                  "proto_version" : {
+                    "type" : "string",
+                    "norms" : {
+                      "enabled" : false
+                    },
+                    "fielddata" : {
+                      "format" : "disabled"
+                    },
+                    "fields" : {
+                      "raw" : {
+                        "type" : "string",
+                        "index" : "not_analyzed",
+                        "ignore_above" : 256
+                      }
+                    }
+                  },
+                  "software_version" : {
+                    "type" : "string",
+                    "norms" : {
+                      "enabled" : false
+                    },
+                    "fielddata" : {
+                      "format" : "disabled"
+                    },
+                    "fields" : {
+                      "raw" : {
+                        "type" : "string",
+                        "index" : "not_analyzed",
+                        "ignore_above" : 256
+                      }
+                    }
+                  }
+                }
+              },
+              "server" : {
+                "properties" : {
+                  "proto_version" : {
+                    "type" : "string",
+                    "norms" : {
+                      "enabled" : false
+                    },
+                    "fielddata" : {
+                      "format" : "disabled"
+                    },
+                    "fields" : {
+                      "raw" : {
+                        "type" : "string",
+                        "index" : "not_analyzed",
+                        "ignore_above" : 256
+                      }
+                    }
+                  },
+                  "software_version" : {
+                    "type" : "string",
+                    "norms" : {
+                      "enabled" : false
+                    },
+                    "fielddata" : {
+                      "format" : "disabled"
+                    },
+                    "fields" : {
+                      "raw" : {
+                        "type" : "string",
+                        "index" : "not_analyzed",
+                        "ignore_above" : 256
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stats" : {
+            "properties" : {
+              "capture" : {
+                "properties" : {
+                  "kernel_drops" : {
+                    "type" : "long"
+                  },
+                  "kernel_drops_delta" : {
+                    "type" : "long"
+                  },
+                  "kernel_packets" : {
+                    "type" : "long"
+                  },
+                  "kernel_packets_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "decoder" : {
+                "properties" : {
+                  "avg_pkt_size" : {
+                    "type" : "long"
+                  },
+                  "avg_pkt_size_delta" : {
+                    "type" : "long"
+                  },
+                  "bytes" : {
+                    "type" : "long"
+                  },
+                  "bytes_delta" : {
+                    "type" : "long"
+                  },
+                  "erspan" : {
+                    "type" : "long"
+                  },
+                  "erspan_delta" : {
+                    "type" : "long"
+                  },
+                  "ethernet" : {
+                    "type" : "long"
+                  },
+                  "ethernet_delta" : {
+                    "type" : "long"
+                  },
+                  "gre" : {
+                    "type" : "long"
+                  },
+                  "gre_delta" : {
+                    "type" : "long"
+                  },
+                  "icmpv4" : {
+                    "type" : "long"
+                  },
+                  "icmpv4_delta" : {
+                    "type" : "long"
+                  },
+                  "icmpv6" : {
+                    "type" : "long"
+                  },
+                  "icmpv6_delta" : {
+                    "type" : "long"
+                  },
+                  "invalid" : {
+                    "type" : "long"
+                  },
+                  "invalid_delta" : {
+                    "type" : "long"
+                  },
+                  "ipraw" : {
+                    "properties" : {
+                      "invalid_ip_version" : {
+                        "type" : "long"
+                      },
+                      "invalid_ip_version_delta" : {
+                        "type" : "long"
+                      }
+                    }
+                  },
+                  "ipv4" : {
+                    "type" : "long"
+                  },
+                  "ipv4_delta" : {
+                    "type" : "long"
+                  },
+                  "ipv4_in_ipv6" : {
+                    "type" : "long"
+                  },
+                  "ipv4_in_ipv6_delta" : {
+                    "type" : "long"
+                  },
+                  "ipv6" : {
+                    "type" : "long"
+                  },
+                  "ipv6_delta" : {
+                    "type" : "long"
+                  },
+                  "ipv6_in_ipv6" : {
+                    "type" : "long"
+                  },
+                  "ipv6_in_ipv6_delta" : {
+                    "type" : "long"
+                  },
+                  "ltnull" : {
+                    "properties" : {
+                      "pkt_too_small" : {
+                        "type" : "long"
+                      },
+                      "pkt_too_small_delta" : {
+                        "type" : "long"
+                      },
+                      "unsupported_type" : {
+                        "type" : "long"
+                      },
+                      "unsupported_type_delta" : {
+                        "type" : "long"
+                      }
+                    }
+                  },
+                  "max_pkt_size" : {
+                    "type" : "long"
+                  },
+                  "max_pkt_size_delta" : {
+                    "type" : "long"
+                  },
+                  "mpls" : {
+                    "type" : "long"
+                  },
+                  "mpls_delta" : {
+                    "type" : "long"
+                  },
+                  "null" : {
+                    "type" : "long"
+                  },
+                  "null_delta" : {
+                    "type" : "long"
+                  },
+                  "pkts" : {
+                    "type" : "long"
+                  },
+                  "pkts_delta" : {
+                    "type" : "long"
+                  },
+                  "ppp" : {
+                    "type" : "long"
+                  },
+                  "ppp_delta" : {
+                    "type" : "long"
+                  },
+                  "pppoe" : {
+                    "type" : "long"
+                  },
+                  "pppoe_delta" : {
+                    "type" : "long"
+                  },
+                  "raw" : {
+                    "type" : "long"
+                  },
+                  "raw_delta" : {
+                    "type" : "long"
+                  },
+                  "sctp" : {
+                    "type" : "long"
+                  },
+                  "sctp_delta" : {
+                    "type" : "long"
+                  },
+                  "sll" : {
+                    "type" : "long"
+                  },
+                  "sll_delta" : {
+                    "type" : "long"
+                  },
+                  "tcp" : {
+                    "type" : "long"
+                  },
+                  "tcp_delta" : {
+                    "type" : "long"
+                  },
+                  "teredo" : {
+                    "type" : "long"
+                  },
+                  "teredo_delta" : {
+                    "type" : "long"
+                  },
+                  "udp" : {
+                    "type" : "long"
+                  },
+                  "udp_delta" : {
+                    "type" : "long"
+                  },
+                  "vlan" : {
+                    "type" : "long"
+                  },
+                  "vlan_delta" : {
+                    "type" : "long"
+                  },
+                  "vlan_qinq" : {
+                    "type" : "long"
+                  },
+                  "vlan_qinq_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "defrag" : {
+                "properties" : {
+                  "ipv4" : {
+                    "properties" : {
+                      "fragments" : {
+                        "type" : "long"
+                      },
+                      "fragments_delta" : {
+                        "type" : "long"
+                      },
+                      "reassembled" : {
+                        "type" : "long"
+                      },
+                      "reassembled_delta" : {
+                        "type" : "long"
+                      },
+                      "timeouts" : {
+                        "type" : "long"
+                      },
+                      "timeouts_delta" : {
+                        "type" : "long"
+                      }
+                    }
+                  },
+                  "ipv6" : {
+                    "properties" : {
+                      "fragments" : {
+                        "type" : "long"
+                      },
+                      "fragments_delta" : {
+                        "type" : "long"
+                      },
+                      "reassembled" : {
+                        "type" : "long"
+                      },
+                      "reassembled_delta" : {
+                        "type" : "long"
+                      },
+                      "timeouts" : {
+                        "type" : "long"
+                      },
+                      "timeouts_delta" : {
+                        "type" : "long"
+                      }
+                    }
+                  },
+                  "max_frag_hits" : {
+                    "type" : "long"
+                  },
+                  "max_frag_hits_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "detect" : {
+                "properties" : {
+                  "alert" : {
+                    "type" : "long"
+                  },
+                  "alert_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "dns" : {
+                "properties" : {
+                  "memcap_global" : {
+                    "type" : "long"
+                  },
+                  "memcap_global_delta" : {
+                    "type" : "long"
+                  },
+                  "memcap_state" : {
+                    "type" : "long"
+                  },
+                  "memcap_state_delta" : {
+                    "type" : "long"
+                  },
+                  "memuse" : {
+                    "type" : "long"
+                  },
+                  "memuse_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "flow" : {
+                "properties" : {
+                  "emerg_mode_entered" : {
+                    "type" : "long"
+                  },
+                  "emerg_mode_entered_delta" : {
+                    "type" : "long"
+                  },
+                  "emerg_mode_over" : {
+                    "type" : "long"
+                  },
+                  "emerg_mode_over_delta" : {
+                    "type" : "long"
+                  },
+                  "memcap" : {
+                    "type" : "long"
+                  },
+                  "memcap_delta" : {
+                    "type" : "long"
+                  },
+                  "memuse" : {
+                    "type" : "long"
+                  },
+                  "memuse_delta" : {
+                    "type" : "long"
+                  },
+                  "spare" : {
+                    "type" : "long"
+                  },
+                  "spare_delta" : {
+                    "type" : "long"
+                  },
+                  "tcp_reuse" : {
+                    "type" : "long"
+                  },
+                  "tcp_reuse_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "flow_mgr" : {
+                "properties" : {
+                  "closed_pruned" : {
+                    "type" : "long"
+                  },
+                  "closed_pruned_delta" : {
+                    "type" : "long"
+                  },
+                  "est_pruned" : {
+                    "type" : "long"
+                  },
+                  "est_pruned_delta" : {
+                    "type" : "long"
+                  },
+                  "new_pruned" : {
+                    "type" : "long"
+                  },
+                  "new_pruned_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "http" : {
+                "properties" : {
+                  "memcap" : {
+                    "type" : "long"
+                  },
+                  "memcap_delta" : {
+                    "type" : "long"
+                  },
+                  "memuse" : {
+                    "type" : "long"
+                  },
+                  "memuse_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "stream" : {
+                "properties" : {
+                  "3whs_ack_in_wrong_dir" : {
+                    "type" : "long"
+                  },
+                  "3whs_ack_in_wrong_dir_delta" : {
+                    "type" : "long"
+                  },
+                  "3whs_async_wrong_seq" : {
+                    "type" : "long"
+                  },
+                  "3whs_async_wrong_seq_delta" : {
+                    "type" : "long"
+                  },
+                  "3whs_right_seq_wrong_ack_evasion" : {
+                    "type" : "long"
+                  },
+                  "3whs_right_seq_wrong_ack_evasion_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "tcp" : {
+                "properties" : {
+                  "invalid_checksum" : {
+                    "type" : "long"
+                  },
+                  "invalid_checksum_delta" : {
+                    "type" : "long"
+                  },
+                  "memuse" : {
+                    "type" : "long"
+                  },
+                  "memuse_delta" : {
+                    "type" : "long"
+                  },
+                  "no_flow" : {
+                    "type" : "long"
+                  },
+                  "no_flow_delta" : {
+                    "type" : "long"
+                  },
+                  "pseudo" : {
+                    "type" : "long"
+                  },
+                  "pseudo_delta" : {
+                    "type" : "long"
+                  },
+                  "pseudo_failed" : {
+                    "type" : "long"
+                  },
+                  "pseudo_failed_delta" : {
+                    "type" : "long"
+                  },
+                  "reassembly_gap" : {
+                    "type" : "long"
+                  },
+                  "reassembly_gap_delta" : {
+                    "type" : "long"
+                  },
+                  "reassembly_memuse" : {
+                    "type" : "long"
+                  },
+                  "reassembly_memuse_delta" : {
+                    "type" : "long"
+                  },
+                  "rst" : {
+                    "type" : "long"
+                  },
+                  "rst_delta" : {
+                    "type" : "long"
+                  },
+                  "segment_memcap_drop" : {
+                    "type" : "long"
+                  },
+                  "segment_memcap_drop_delta" : {
+                    "type" : "long"
+                  },
+                  "sessions" : {
+                    "type" : "long"
+                  },
+                  "sessions_delta" : {
+                    "type" : "long"
+                  },
+                  "ssn_memcap_drop" : {
+                    "type" : "long"
+                  },
+                  "ssn_memcap_drop_delta" : {
+                    "type" : "long"
+                  },
+                  "stream_depth_reached" : {
+                    "type" : "long"
+                  },
+                  "stream_depth_reached_delta" : {
+                    "type" : "long"
+                  },
+                  "syn" : {
+                    "type" : "long"
+                  },
+                  "syn_delta" : {
+                    "type" : "long"
+                  },
+                  "synack" : {
+                    "type" : "long"
+                  },
+                  "synack_delta" : {
+                    "type" : "long"
+                  }
+                }
+              },
+              "uptime" : {
+                "type" : "long"
+              }
+            }
+          },
+          "stream" : {
+            "type" : "long"
+          },
+          "timestamp" : {
+            "type" : "date",
+            "index" : "analyzed",
+            "format" : "strict_date_optional_time||epoch_millis"
+          },
+          "tls" : {
+            "properties" : {
+              "fingerprint" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "issuerdn" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "sni" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "subject" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              },
+              "version" : {
+                "type" : "string",
+                "norms" : {
+                  "enabled" : false
+                },
+                "fielddata" : {
+                  "format" : "disabled"
+                },
+                "fields" : {
+                  "raw" : {
+                    "type" : "string",
+                    "index" : "not_analyzed",
+                    "ignore_above" : 256
+                  }
+                }
+              }
+            }
+          },
+          "tx_id" : {
+            "type" : "long"
+          }
+        }
+      },
+      "_default_" : {
+        "_all" : {
+          "enabled" : false,
+          "omit_norms" : true
+        },
+        "dynamic_templates" : [ {
+          "message_field" : {
+            "mapping" : {
+              "index" : "analyzed",
+              "omit_norms" : true,
+              "fielddata" : {
+                "format" : "disabled"
+              },
+              "type" : "string"
+            },
+            "match" : "message",
+            "match_mapping_type" : "string"
+          }
+        }, {
+          "string_fields" : {
+            "mapping" : {
+              "index" : "analyzed",
+              "omit_norms" : true,
+              "fielddata" : {
+                "format" : "disabled"
+              },
+              "type" : "string",
+              "fields" : {
+                "raw" : {
+                  "index" : "not_analyzed",
+                  "ignore_above" : 256,
+                  "type" : "string"
+                }
+              }
+            },
+            "match" : "*",
+            "match_mapping_type" : "string"
+          }
+        } ],
+        "properties" : {
+          "@timestamp" : {
+            "type" : "date",
+            "format" : "strict_date_optional_time||epoch_millis"
+          },
+          "@version" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "alert" : {
+            "dynamic" : "true",
+            "properties" : {
+              "action" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "category" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "dst_mask" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "gid" : {
+                "type" : "integer"
+              },
+              "rev" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "severity" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              },
+              "signature" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+              },
+              "signature_id" : {
+                "type" : "integer",
+                "index" : "analyzed"
+              }
+            }
+          },
+          "dest_ip" : {
+            "type" : "ip",
+            "index" : "analyzed"
+          },
+          "dest_port" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "event_type" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "geoip" : {
+            "dynamic" : "true",
+            "properties" : {
+              "latitude" : {
+                "type" : "float"
+              },
+              "location" : {
+                "type" : "geo_point"
+              },
+              "longitude" : {
+                "type" : "float"
+              }
+            }
+          },
+          "icmp_code" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "icmp_type" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "packet" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "payload" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "payload_printable" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "proto" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+          },
+          "src_ip" : {
+            "type" : "ip",
+            "index" : "analyzed"
+          },
+          "src_port" : {
+            "type" : "integer",
+            "index" : "analyzed"
+          },
+          "timestamp" : {
+            "type" : "date",
+            "index" : "analyzed",
+            "format" : "strict_date_optional_time||epoch_millis"
+          }
+        }
+      }
+    }
+  }
+}
