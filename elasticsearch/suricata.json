@@ -321,6 +321,44 @@
               "type" : "string"
             }
           }
+        },
+        "dns": {
+          "dynamic": true,
+          "type": "object",
+          "properties": {
+            "rcode" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "rdata" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "rrname" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "rrtype" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            },
+            "ttl" : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "tx_id " : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "id " : {
+              "index" : "analyzed",
+              "type" : "integer"
+            },
+            "type" : {
+              "index" : "not_analyzed",
+              "type" : "string"
+            }
+          }
         }
       }
     }
