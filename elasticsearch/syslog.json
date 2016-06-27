@@ -1,6 +1,6 @@
 {
   "order" : 0,
-  "template" : "samba-*",
+  "template" : "syslog-*",
   "settings" : {
     "index.refresh_interval" : "60s",
     "index.number_of_replicas" : "1",
@@ -43,23 +43,31 @@
           "index" : "not_analyzed",
           "type" : "string"
         },
-        "syslog_pri" : {
-          "index" : "analyzed",
-          "type" : "integer"
-        },
-        "syslog_timestamp" : {
+        "facility" : {
           "index" : "not_analyzed",
           "type" : "string"
         },
-        "syslog_hostname" : {
+        "message" : {
           "index" : "not_analyzed",
           "type" : "string"
         },
-        "syslog_program" : {
+        "program" : {
           "index" : "not_analyzed",
           "type" : "string"
         },
-        "syslog_message" : {
+        "severity" : {
+          "index" : "not_analyzed",
+          "type" : "string"
+        },
+        "syslogtag" : {
+          "index" : "not_analyzed",
+          "type" : "string"
+        },
+        "timestamp": {
+          "index": "analyzed",
+          "type": "date"
+	},
+        "host" : {
           "index" : "not_analyzed",
           "type" : "string"
         }
